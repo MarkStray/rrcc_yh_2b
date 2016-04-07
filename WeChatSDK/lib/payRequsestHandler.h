@@ -44,9 +44,9 @@
 #define APP_ID          @"wx2ae0a4f89e23ceb7"               //APPID
 #define APP_SECRET      @"72061a0d996ee722f03ea95a201e51df" //appsecret
 //商户号，填写商户对应参数
-#define MCH_ID          @"1264739201"
+#define MCH_ID          @"1327556401"
 //商户API密钥，填写相应参数
-#define PARTNER_KEY      @"e4e8e80b9e949caf838bf2e938a35a58"
+#define PARTNER_KEY      @"23781cc8458c5d72dfcabcd8c955f125"
 
 //支付结果回调页面
 #define NOTIFY_URL      @"http://wxpay.weixin.qq.com/pub_v2/pay/notify.v2.php"

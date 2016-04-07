@@ -39,7 +39,7 @@
     
     NSString *plistPath = [[NSBundle mainBundle] pathForResource:@"TestSwitch" ofType:@"plist"];
     NSDictionary *testDict = [NSDictionary dictionaryWithContentsOfFile:plistPath];
-    BOOL isTest = testDict[@"isTest"];
+    BOOL isTest = [(NSNumber *)testDict[@"isTest"] boolValue];
     
     if (payType == PayEngineTypeWX) {/*微信支付*/
         

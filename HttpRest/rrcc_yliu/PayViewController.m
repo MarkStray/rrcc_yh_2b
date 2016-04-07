@@ -102,7 +102,7 @@
     NSString *mobile   = [self.mobile stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
     
     NSString *address  = [self.delivery intValue] == 2 ? self.inputAddress: self.distributeAddress;
-    address = @"测试自提点";// add
+    
     address = [address stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
     
     
@@ -699,9 +699,7 @@
             cell.addressTextView.editable = YES;
             cell.addressTextView.backgroundColor = [self.inputAddress isEqual:@""] || self.inputAddress==nil? [UIColor clearColor]:[UIColor whiteColor];
         } else {
-            //cell.addressTextView.text = self.distributeAddress;
-            
-            cell.addressTextView.text = @"测试自提点";
+            cell.addressTextView.text = self.distributeAddress;
             cell.addressTextView.editable = NO;
             cell.addressTextView.backgroundColor = [UIColor whiteColor];
         }

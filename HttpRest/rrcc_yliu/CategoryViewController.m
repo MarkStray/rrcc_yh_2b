@@ -8,7 +8,7 @@
 
 #import "CategoryViewController.h"
 #import "ProductDetailViewController.h"
-
+#import "SearchViewController.h"
 #import "PayViewController.h"
 
 #define kDockTableViewCell @"DockCell"
@@ -26,12 +26,13 @@
 @property (nonatomic, strong) NSMutableDictionary *itemListDict;//products
 
 @property (nonatomic, assign) NSInteger expiredCount;// 即将过期的数量
-
+@property (nonatomic,strong)NSMutableArray *
+searcharray;
 @end
 
 static void *dockTableView = (void *)&dockTableView;
 static void *itemTableView = (void *)&itemTableView;
-
+static void *searchview    = (void *)&searchview;
 @implementation CategoryViewController
 {
     BOOL _isRelate;// 控制左右滚动不会受影响
@@ -78,15 +79,28 @@ static void *itemTableView = (void *)&itemTableView;
     
     self.dockList = [NSMutableArray array];
     self.shadowDockList = [NSMutableArray array];
+    self.searcharray=[NSMutableArray array];
     self.itemListDict = [NSMutableDictionary dictionary];
     [self.view addSubview:self.dockTableView];
     [self.view addSubview:self.itemTableView];
+    [self.view addSubview:self.searchview];
     
+}
+-(UIButton *)searchview
+{
+    UIButton *searchbtn=[ZZFactory buttonWithFrame:CGRectMake(10, 64+5, kScreenWidth-20, 35-10) title:@"搜索本店铺内商品名称" titleColor:[UIColor grayColor] image:nil bgImage:nil];
+    searchbtn.titleLabel.font = Font(14);
+    searchbtn.layer.cornerRadius=12;
+    searchbtn.layer.masksToBounds=YES;
+    searchbtn.layer.borderWidth=1;
+    searchbtn.layer.borderColor=[UIColor grayColor].CGColor;
+    [searchbtn addTarget:self action:@selector(searchviewclick:) forControlEvents:UIControlEventTouchUpInside];
+    return searchbtn;
 }
 
 - (UITableView *)dockTableView {
     if (!_dockTableView) {
-        _dockTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 64, kScreenWidth/4, self.view.height-64-49) style:UITableViewStylePlain];
+        _dockTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 64+35, kScreenWidth/4, self.view.height-64-35-49) style:UITableViewStylePlain];
         _dockTableView.delegate = self;
         _dockTableView.dataSource = self;
         _dockTableView.rowHeight = 50*autoSizeScaleY;
@@ -100,7 +114,7 @@ static void *itemTableView = (void *)&itemTableView;
 
 - (UITableView *)itemTableView {
     if (!_itemTableView) {
-        _itemTableView = [[UITableView alloc] initWithFrame:CGRectMake(kScreenWidth/4, 64, kScreenWidth/4*3, self.view.height-64-49) style:UITableViewStylePlain];
+        _itemTableView = [[UITableView alloc] initWithFrame:CGRectMake(kScreenWidth/4, 64+35, kScreenWidth/4*3, self.view.height-64-35-49) style:UITableViewStylePlain];
         _itemTableView.delegate = self;
         _itemTableView.dataSource = self;
         _itemTableView.rowHeight = 75*autoSizeScaleY;
@@ -138,7 +152,7 @@ static void *itemTableView = (void *)&itemTableView;
             [self.shadowDockList removeAllObjects];
             [self.dockList removeAllObjects];
             [self.itemListDict removeAllObjects];
-            
+            [self.searcharray removeAllObjects];
             NSArray *arr = dict[@"CallInfo"];
             
             // 保存下店铺Id
@@ -151,6 +165,7 @@ static void *itemTableView = (void *)&itemTableView;
             
             for (NSDictionary *d in arr) {
                 ProductsModel *model = [ProductsModel creatWithDictionary:d];
+                [self.searcharray addObject:model];
                 if (![self.dockList containsObject:model.brandid]) {
                     [self.dockList addObject:model.brandid];
                     
@@ -239,7 +254,13 @@ static void *itemTableView = (void *)&itemTableView;
     }
     return _lowerFloorView;
 }
-
+-(void)searchviewclick:(UIButton *)btn
+{
+    SearchViewController *searchProduct = [[SearchViewController alloc] init];
+    searchProduct.itemList = self.searcharray;
+    [self pushNewViewController:searchProduct];
+    
+}
 - (void)refresh {
     [self.lowerFloorView removeFromSuperview];
     [self downloadCategoryData];

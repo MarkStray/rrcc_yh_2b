@@ -23,12 +23,6 @@
 			<key>title</key>
 			<string>我的余额</string>
 		</dict>
-		<dict>
-			<key>img</key>
-			<string>mine-redpage</string>
-			<key>title</key>
-			<string>我的红包</string>
-		</dict>
 	</array>
 	<array>
 		<dict>

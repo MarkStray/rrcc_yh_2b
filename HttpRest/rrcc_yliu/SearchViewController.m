@@ -8,36 +8,108 @@
 
 #import "SearchViewController.h"
 #import "ProductDetailViewController.h"
-
+#define kDockTableViewItemCell @"ProductCell"
 @interface SearchViewController ()<UISearchBarDelegate,UITableViewDelegate,UITableViewDataSource>
+{
+    UITableView *_historytable;
+}
+
 
 @property (nonatomic, strong) UISearchBar *productsSearchBar;
 @property (nonatomic, strong) UITableView *searchTableView;
 @property (nonatomic, strong) NSMutableArray *originalProductList;
 @property (nonatomic, strong) NSMutableArray *filteredProductList;
-
+@property (nonatomic, strong)NSMutableArray *historysearchList;
 @end
 
 @implementation SearchViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:self.productsSearchBar];
     UIButton *searchBtn = [ZZFactory buttonWithFrame:CGRectMake(0, 0, 60*autoSizeScaleX, 28) title:@"取消" titleColor:GLOBAL_COLOR image:nil bgImage:nil];
     searchBtn.backgroundColor = [UIColor whiteColor];
     [searchBtn SetBorderWithcornerRadius:5.f BorderWith:0.f AndBorderColor:nil];
     [searchBtn addTarget:self action:@selector(showDismiss) forControlEvents:UIControlEventTouchUpInside];
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:searchBtn];
-    [ZZFactory imageViewWithFrame:CGRectMake((kScreenWidth-100)/2, 120, 100, 70) defaultImage:@"Search_Content" superView:self.view];
     [self initSearchDataSource];
+    //        品类页面搜索
+        [self searchHistoryList];
+        UIImageView *bgimage=[[UIImageView alloc]initWithFrame:self.view.bounds];
+        bgimage.image=[UIImage imageNamed:@"clearrecode"];
+        [self.view addSubview:bgimage];
+//        [self inithotsearchcontrol];
+        [self inithistorycontrol];
+        
+    
+}
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [_searchTableView reloadData];
+    
 }
 
+-(void)inithotsearchcontrol
+{
+//    64+5 =》130
+    UILabel *hotsearchlabel=[ZZFactory labelWithFrame:CGRectMake(5+3, 64+5, kScreenWidth-10, 34) font:[UIFont systemFontOfSize:14] color:[UIColor grayColor] text:@"热门搜索"];
+    NSMutableArray *hotlist=[NSMutableArray arrayWithObjects:@"崇明绿色",@"鲜店优选",@"龙虾",@"组合", nil];
+    for (int i=0; i<hotlist.count; i++) {
+        UIButton *hotbutton=[ZZFactory buttonWithFrame:CGRectMake(5+i*75, 64+39, 65, 30) title:hotlist[i] titleColor:[UIColor blackColor] image:nil bgImage:nil];
+        hotbutton.backgroundColor=[UIColor whiteColor];
+        [hotbutton SetBorderWithcornerRadius:13.f BorderWith:1.f AndBorderColor:[UIColor grayColor]];
+        [hotbutton.titleLabel setFont:[UIFont systemFontOfSize:14]];
+        [hotbutton addTarget:self action:@selector(hotsearchclick:) forControlEvents:UIControlEventTouchUpInside];
+        [self.view addSubview:hotbutton];
+        [self.view addSubview:hotsearchlabel];
+        
+    }
+    
+}
+-(void)inithistorycontrol
+{
+    UILabel *historylabel=[ZZFactory labelWithFrame:CGRectMake(5+3, 64+5, kScreenWidth-10, 44-10) font:[UIFont systemFontOfSize:14] color:[UIColor grayColor] text:@"历史记录"];
+    UIButton *delectbtn=[UIButton buttonWithType:UIButtonTypeCustom];
+    delectbtn.frame=CGRectMake(0, kScreenHeight/2+15, kScreenWidth, 30);
+    self.view.center=delectbtn.center;
+    [delectbtn setTitleColor:[UIColor grayColor] forState:UIControlStateNormal];
+    [delectbtn addTarget:self action:@selector(delecthistoarydata:) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:delectbtn];
+    [self.view addSubview:historylabel];
+    CGFloat buttonx=0;
+    CGFloat buttony=0;
+    for (int i=0; i<self.historysearchList.count; i++) {
+        NSData *data=self.historysearchList[i];
+        NSString *result  =[[ NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        CGSize size = [result sizeWithAttributes:@{NSFontAttributeName: [UIFont systemFontOfSize:14]}];
+        if (5+buttonx+size.width+40>kScreenWidth) {
+            if (5+size.width>kScreenWidth) {
+                buttony=0;
+            }else{
+                buttony=buttony+35;
+                buttonx=0;
+            }
+        }
+        UIButton *hisbutton=[ZZFactory buttonWithFrame:CGRectMake(5+buttonx, 64+5+34+buttony,size.width+30, 30) title:result titleColor:[UIColor blackColor] image:nil bgImage:nil];
+        hisbutton.tag=1000+i;
+        hisbutton.backgroundColor=[UIColor whiteColor];
+        [hisbutton.titleLabel setFont:[UIFont systemFontOfSize:14]];
+        [hisbutton addTarget:self action:@selector(hotsearchclick:) forControlEvents:UIControlEventTouchUpInside];
+        [hisbutton SetBorderWithcornerRadius:13.f BorderWith:1.f AndBorderColor:[UIColor grayColor]];
+        buttonx=size.width+40+buttonx;
+        [self.view addSubview:hisbutton];
+        
+    }
+}
 - (void)initSearchDataSource {
     self.originalProductList = [NSMutableArray array];
     self.filteredProductList = [NSMutableArray array];
-    for (NSArray *item in self.itemList)
-        for (ProductsModel *model in item)
-            [self.originalProductList addObject:model];
+    self.historysearchList=[NSMutableArray array];
+    for (ProductsModel *model in self.itemList)
+    {
+    [self.originalProductList addObject:model];
+    }
 }
 
 - (UISearchBar *)productsSearchBar {
@@ -54,12 +126,13 @@
 - (UITableView *)searchTableView {
     if (!_searchTableView) {
         _searchTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 64, kScreenWidth, self.view.height-64) style:UITableViewStylePlain];
-        _searchTableView.dataSource = self;
         _searchTableView.delegate = self;
-        _searchTableView.rowHeight =  120*autoSizeScaleY;
-        _searchTableView.backgroundColor = BACKGROUND_COLOR;
-        _searchTableView.separatorColor = [UIColor clearColor];
-        [_searchTableView registerNib:[UINib nibWithNibName:@"MainCell" bundle:nil] forCellReuseIdentifier:@"MainCellID"];
+        _searchTableView.dataSource = self;
+        _searchTableView.rowHeight = 75*autoSizeScaleY;
+        _searchTableView.showsVerticalScrollIndicator = YES;
+        _searchTableView.backgroundColor = [UIColor whiteColor];
+        _searchTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+        [_searchTableView registerNib:[UINib nibWithNibName:kDockTableViewItemCell bundle:nil] forCellReuseIdentifier:kDockTableViewItemCell];
     }
     return _searchTableView;
 }
@@ -102,12 +175,20 @@
     [self.view addSubview:self.searchTableView];
     [self.searchTableView reloadData];
 }
+-(void)searchBarTextDidEndEditing:(UISearchBar *)searchBar
+{
+    if ([searchBar.text isEqualToString:@""]) {
+        return;
+    }
+    NSData *data = [searchBar.text dataUsingEncoding:NSUTF8StringEncoding];
+    if (![self.historysearchList containsObject:data]) [self saveDataToLocation:data];//本地不存在保存
+}
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     [self.productsSearchBar resignFirstResponder];
 }
 
-#pragma mark - UITableView 
+#pragma mark - UITableView
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
     return 30;
@@ -128,17 +209,66 @@
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    MainCell *cell = [tableView dequeueReusableCellWithIdentifier:@"MainCellID" forIndexPath:indexPath];
+    ProductCell *cell = [tableView dequeueReusableCellWithIdentifier:kDockTableViewItemCell forIndexPath:indexPath];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
     ProductsModel *model = self.filteredProductList[indexPath.row];
-    [cell updateUIUsingModel:@[model] complete:^(ProductsModel *model) {
-        NSMutableArray *productsModel = [[SingleShoppingCar sharedInstance] productsDataSource];
-        ProductDetailViewController *pVC = [[ProductDetailViewController alloc] init];
-        for (ProductsModel *mdl in productsModel)
-            if ([model.skuid isEqualToString:mdl.skuid]) model.count = mdl.count;
-        pVC.detailProductModel = model;
-        [self pushNewViewController:pVC];
-    }];
+    NSMutableArray *carProducts = [[SingleShoppingCar sharedInstance] productsDataSource];
+    for (ProductsModel *carModel in carProducts) {
+        if ([model.skuid isEqualToString:carModel.skuid]) {
+            model.count = carModel.count;
+        }
+    }
+    [cell updateUIUsingModel:model];
+    cell.purchaseBlockCB = ^ BOOL (ProductsModel *model){
+        return [[SingleShoppingCar sharedInstance] playerProductsModel:model];
+    };
     return cell;
+}
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    ProductsModel *model = self.filteredProductList[indexPath.row];
+    ProductDetailViewController *pVC = [[ProductDetailViewController alloc] init];
+    pVC.detailProductModel = model;
+    [self pushNewViewController:pVC];
+    
+}
+
+- (void)saveDataToLocation:(NSData *)data {
+    NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
+    NSArray *lSiteList = [ud objectForKey:@"historysearch"];
+    NSMutableArray *locArr = [NSMutableArray arrayWithArray:lSiteList];
+    
+    [locArr insertObject:data atIndex:0];
+    if (locArr.count == 6) [locArr removeObjectAtIndex:5];//控制4条数据
+    
+    [ud setObject:[NSArray arrayWithArray:locArr] forKey:@"historysearch"];
+    [ud synchronize];
+}
+- (void)searchHistoryList {
+    NSArray *lSiteList = [[NSUserDefaults standardUserDefaults] objectForKey:@"historysearch"];
+    if (!lSiteList) {
+        lSiteList = [NSArray array];
+        [[NSUserDefaults standardUserDefaults] setObject:lSiteList forKey:@"historysearch"];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+    }
+    /*初始化数据源*/
+    self.historysearchList = [NSMutableArray arrayWithArray:lSiteList];
+}
+-(void)delecthistoarydata:(UIButton *)btn
+{
+    for (int i=0; i<self.historysearchList.count; i++) {
+        UIButton *button=[self.view viewWithTag:1000+i];
+        [button removeFromSuperview];
+    }
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"historysearch"];
+    
+    [self.historysearchList removeAllObjects];
+    
+}
+-(void)hotsearchclick:(UIButton *)btn
+{
+    self.productsSearchBar.text=btn.titleLabel.text;
+    [self searchBar:self.productsSearchBar textDidChange:btn.titleLabel.text];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -147,13 +277,13 @@
 }
 
 /*
-#pragma mark - Navigation
-
-// In a storyboard-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
-}
-*/
+ #pragma mark - Navigation
+ 
+ // In a storyboard-based application, you will often want to do a little preparation before navigation
+ - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+ // Get the new view controller using [segue destinationViewController].
+ // Pass the selected object to the new view controller.
+ }
+ */
 
 @end

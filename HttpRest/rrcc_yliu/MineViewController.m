@@ -115,7 +115,7 @@
     [[DataEngine sharedInstance] requestUserInfoDataSuccess:^(id responseData) {
         [self hideLoadingIndicator];//
         NSDictionary *dic = (NSDictionary *)responseData;
-        DLog(@"User: %@",dic);
+        DLog(@"UserInfo: %@",dic);
         if ([dic[@"Success"] integerValue] == 1) {
             NSDictionary *userDict = dic[@"CallInfo"][@"User"];
             
@@ -125,10 +125,10 @@
             //_credit  = userDict[@"credit"];
             //NSString *credit = [NSString stringWithFormat:@"当前积分%@分",_credit];
             
-            self.details = [NSMutableArray arrayWithArray:@[@[@"查看全部订单",@""],@[balance,@"查看"],@[@"",@""],@[@""]]];
+            self.details = [NSMutableArray arrayWithArray:@[@[@"查看全部订单",@""],@[balance],@[@"",@""],@[@""]]];
             [self.mineTableView reloadData];
         } else {
-            self.details = [NSMutableArray arrayWithArray:@[@[@"",@""],@[@"",@""],@[@"",@""],@[@""]]];
+            self.details = [NSMutableArray arrayWithArray:@[@[@"",@""],@[@""],@[@"",@""],@[@""]]];
             [self.mineTableView reloadData];
         }
         
@@ -233,9 +233,9 @@
             [self pushNewViewController:balance];
         } else if (indexPath.row == 1) {
             // 红包
-            SalaryViewController *salary = [[SalaryViewController alloc] init];
-            salary.title = title;
-            [self pushNewViewController:salary];
+            //SalaryViewController *salary = [[SalaryViewController alloc] init];
+            //salary.title = title;
+            //[self pushNewViewController:salary];
         }
     } else if (indexPath.section == 2) {
         if (indexPath.row == 0) {
@@ -246,6 +246,8 @@
             [self pushNewViewController:qa];
         }
     } else {
+        [[SingleShoppingCar sharedInstance] clearShoppingCar];
+        
         [[SingleUserInfo sharedInstance] setIsExit:YES];
         [[SingleUserInfo sharedInstance] setLocationPlayerStatus:NO];
         //[[SingleUserInfo sharedInstance] showLoginView];

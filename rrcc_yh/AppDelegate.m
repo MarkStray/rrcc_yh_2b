@@ -31,18 +31,18 @@
 
 #import "NSString+Hashing.h"
 
-#define UMKEY       @"55ac540f67e58e29c3005d2d"
+#define UMKEY       @"56fdd62d67e58ec45c00137b"
 
 // tencent
-#define TAPP_ID     @"1104847736"  // @"QQ041DAA378"
-#define TAPP_KEY    @"d5bGozTV2OCYfUbP"
+#define TAPP_ID     @"1105227877"
+#define TAPP_KEY    @"URS23fwfEyI9Wbug"
 
 // sina
-#define SAPP_ID     @"1290145605"
-#define SAPP_KEY    @"8ef50b6d250db0b3a407ac5c865675ba"
+//#define SAPP_ID     @"1290145605"
+//#define SAPP_KEY    @"8ef50b6d250db0b3a407ac5c865675ba"
 
 // baidu
-#define BAK         @"uemuHM29TgcWW1XVTePga1lp"
+//#define BAK         @"uemuHM29TgcWW1XVTePga1lp"
 
 
 @interface AppDelegate () <WXApiDelegate>
